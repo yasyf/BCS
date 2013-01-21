@@ -2,6 +2,10 @@ property username : ""
 property pass : ""
 property computerpass : ""
 
+--decode credtentials
+set username to rot13(username)
+set pass to rot13(pass)
+set computerpass to rot13(computerpass)
 
 activate
 display dialog "Welcome to the Brentwood College School Student Computer Setup. This Script will map your network drive and install the school printers. Click OK to proceed."
@@ -122,6 +126,11 @@ try
 	
 	do shell script "umount /Volumes/setup"
 end try
+
+--encode credtentials
+set username to rot13(username)
+set pass to rot13(pass)
+set computerpass to rot13(computerpass)
 
 display dialog "Setup Complete!" buttons {"Ok"} default button 1
 
