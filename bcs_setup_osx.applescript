@@ -31,13 +31,13 @@ end if
 
 activate
 
-set printers to (choose from list {"alex", "allard", "ellis", "HopeHouse", "mackenzie", "privett", "rogers", "whittall"} with prompt "Which House Are You In?")
+set printers to (choose from list {"Alex", "Allard", "Ellis", "Hopehouse", "Mackenzie", "Privett", "Rogers", "Whittall"} with prompt "Which House Are You In?")
 
 mountDrives()
 
 activate
 
-display dialog "Creating Optional Desktop Shortcuts" buttons {"Cancel"} giving up after 5
+display dialog "Creating Optional Desktop Shortcuts" buttons {"Cancel"} giving up after 2
 
 try
 	do shell script "rm ~/Desktop/" & username & "\\$"
@@ -55,7 +55,7 @@ end try
 -- Install Papercut
 
 activate
-display dialog "Installing Print Software" buttons {"Cancel"} giving up after 5
+display dialog "Installing Print Software" buttons {"Cancel"} giving up after 2
 
 try
 	do shell script "rmdir /Volumes/papercut"
@@ -101,11 +101,11 @@ activate
 try
 	do shell script smb_mount & "//setup:setup@bombur.brentwood.bc.ca/setup$ /Volumes/setup"
 	
-	display dialog "Installing Printer: Ross" buttons {"Cancel"} giving up after 5
+	display dialog "Installing Printer: Ross" buttons {"Cancel"} giving up after 2
 	
 	do shell script "lpadmin -p rossprinter -E -v lpd://gazug.brentwood.bc.ca/rossprinter -P /Volumes/setup/Ricohmp4501ps.ppd"
 	
-	display dialog "Installing Printer: Crooks" buttons {"Cancel"} giving up after 5
+	display dialog "Installing Printer: Crooks" buttons {"Cancel"} giving up after 2
 	
 	do shell script "lpadmin -p Crooks -E -v lpd://gazug.brentwood.bc.ca/Crooks -P /Volumes/setup/RicohMP_C4000.ppd"
 	
@@ -115,7 +115,7 @@ try
 			do shell script "sudo installer -pkg /Volumes/setup/gutenprint.mpkg -target /" password computerpass with administrator privileges
 		end try
 		
-		display dialog "Installing Printer: " & printers buttons {"Cancel"} giving up after 5
+		display dialog "Installing Printer: " & printers buttons {"Cancel"} giving up after 2
 		
 		do shell script "lpadmin -p " & printers & " -E -v lpd://gazug.brentwood.bc.ca/" & printers & " -m \"gutenprint.5.2://pcl-g_6/expert Generic PCL 6/PCL XL Printer - CUPS+Gutenprint v5.2.9\""
 	end if
@@ -171,7 +171,7 @@ on mountDrives()
 	set finishedBool to false
 	repeat until finishedBool is true
 		activate
-		display dialog "Mapping home drive" buttons {"Cancel"} giving up after 5
+		display dialog "Mapping home drive" buttons {"Cancel"} giving up after 2
 		
 		try
 			do shell script "rmdir /Volumes/" & username
@@ -187,7 +187,7 @@ on mountDrives()
 		end try
 		
 		activate
-		display dialog "Mapping share drive" buttons {"Cancel"} giving up after 5
+		display dialog "Mapping share drive" buttons {"Cancel"} giving up after 2
 		
 		try
 			do shell script "rmdir /Volumes/share"
