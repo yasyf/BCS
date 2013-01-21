@@ -88,9 +88,9 @@ try
 	end tell
 end try
 try
-	do shell script "cat /Applications/PCClient.app/Contents/Info.plist | sed 'N;$!P;$!D;$d' > /Applications/PCClient.app/Contents/Info.plist.tmp"
-	do shell script "echo '<key>LSUIElement</key> <true/> </dict> </plist>' >> /Applications/PCClient.app/Contents/Info.plist.tmp"
-	do shell script "mv /Applications/PCClient.app/Contents/Info.plist.tmp /Applications/PCClient.app/Contents/Info.plist"
+	do shell script "cat /Applications/PCClient.app/Contents/Info.plist | sed 'N;$!P;$!D;$d' > /Applications/PCClient.app/Contents/Info.plist.tmp" password computerpass with administrator privileges
+	do shell script "echo '<key>LSUIElement</key> <true/> </dict> </plist>' >> /Applications/PCClient.app/Contents/Info.plist.tmp" password computerpass with administrator privileges
+	do shell script "mv /Applications/PCClient.app/Contents/Info.plist.tmp /Applications/PCClient.app/Contents/Info.plist" password computerpass with administrator privileges
 end try
 
 try
