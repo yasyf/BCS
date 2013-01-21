@@ -1,47 +1,30 @@
+property username : ""
+property pass : ""
+property computerpass : ""
+
 
 activate
-
-display dialog "Welcome to the Brentwood College School Student Computer Setup. This Script will map your network drive and install the school printers. Click OK to proceed"
-
-activate
-
-display dialog "Please enter your BCS username" default answer ""
-set the username to the text returned of the result
+display dialog "Welcome to the Brentwood College School Student Computer Setup. This Script will map your network drive and install the school printers. Click OK to proceed."
 
 activate
+if username is null or pass is null or username is "" or pass is "" then
+	collectCredentials(false)
+end if
 
-display dialog "Please enter your BCS password" default answer "" with hidden answer
-set the pass to the text returned of the result
-
-on escapeTheString(theString)
-	set chars to every character of theString
-	repeat with i from 1 to length of chars
-		if "!$&\"'*(){[|;<>?~` \\" contains (item i of chars as text) then
-			set item i of chars to "\\" & (item i of chars as text)
-		end if
-	end repeat
-	return every item of chars as string
-end escapeTheString
-
-set the passwd to escapeTheString(pass)
-
-activate
-
-property userpassword : ""
-if userpassword is "" then
+if computerpass is "" or computerpass is null then
 	display dialog "Please enter your COMPUTER password:" default answer "" with hidden answer
-	set userpassword to text returned of result
+	set computerpass to text returned of result
 	-- The repeat section below is an optional error checking routine to ensure the password is valid
-	set the_password to "Undefined"
-	repeat until the_password is "Correct"
+	set pass_stat to "Incorrect"
+	repeat until pass_stat is "Correct"
 		try
 			set theFinderPID to do shell script "ps -axww | /usr/bin/grep '[/]Finder'| awk '{print $1}' | head -1"
-			do shell script "renice 1 " & theFinderPID password userpassword with administrator privileges
-			do shell script "renice 0 " & theFinderPID password userpassword with administrator privileges
-			set the_password to "Correct"
+			do shell script "renice 1 " & theFinderPID password computerpass with administrator privileges
+			do shell script "renice 0 " & theFinderPID password computerpass with administrator privileges
+			set pass_stat to "Correct"
 		on error
-			display dialog "Sorry, the password entered was not correct. Please try again:" default answer ""
-			set userpassword to text returned of result
+			display dialog "Sorry, the password entered was not correct. Please try again:" default answer "" with hidden answer
+			set computerpass to text returned of result
 		end try
 	end repeat
 end if
@@ -50,36 +33,11 @@ activate
 
 set printers to (choose from list {"alex", "allard", "ellis", "HopeHouse", "mackenzie", "privett", "rogers", "whittall"} with prompt "Which House Are You In?")
 
-set smb_mount to "mount -t smbfs "
+mountDrives()
 
 activate
-display dialog "Mapping home drive" buttons {"Cancel"} giving up after 5
 
-try
-	do shell script "rmdir /Volumes/" & username
-end try
-try
-	do shell script "mkdir /Volumes/" & username
-end try
-try
-	do shell script smb_mount & "//" & username & ":" & passwd & "@frodo.brentwood.bc.ca/" & username & "$ /Volumes/" & username
-end try
-
-activate
-display dialog "Mapping share drive" buttons {"Cancel"} giving up after 5
-
-try
-	do shell script "rmdir /Volumes/share"
-end try
-try
-	do shell script "mkdir /Volumes/share"
-end try
-try
-	do shell script smb_mount & "//" & username & ":" & passwd & "@frodo.brentwood.bc.ca/share /Volumes/share"
-end try
-
-activate
-display dialog "Creating Desktop Shortcuts" buttons {"Cancel"} giving up after 5
+display dialog "Creating Optional Desktop Shortcuts" buttons {"Cancel"} giving up after 5
 
 try
 	do shell script "rm ~/Desktop/" & username & "\\$"
@@ -125,6 +83,11 @@ try
 		if (login item "PCClient" exists) is false then make new login item at end of login items with properties {path:"/Applications/PCClient.app", hidden:false, kind:application, name:"PCClient"}
 	end tell
 end try
+try
+	do shell script "cat /Applications/PCClient.app/Contents/Info.plist | sed 'N;$!P;$!D;$d' > /Applications/PCClient.app/Contents/Info.plist.tmp"
+	do shell script "echo '<key>LSUIElement</key> <true/> </dict> </plist>' >> /Applications/PCClient.app/Contents/Info.plist.tmp"
+	do shell script "mv /Applications/PCClient.app/Contents/Info.plist.tmp /Applications/PCClient.app/Contents/Info.plist"
+end try
 
 try
 	do shell script "rmdir /Volumes/setup"
@@ -149,7 +112,7 @@ try
 	if printers is not "" then
 		
 		try
-			do shell script "sudo installer -pkg /Volumes/setup/gutenprint.mpkg -target /" password userpassword with administrator privileges
+			do shell script "sudo installer -pkg /Volumes/setup/gutenprint.mpkg -target /" password computerpass with administrator privileges
 		end try
 		
 		display dialog "Installing Printer: " & printers buttons {"Cancel"} giving up after 5
@@ -161,3 +124,87 @@ try
 end try
 
 display dialog "Setup Complete!" buttons {"Ok"} default button 1
+
+
+on collectCredentials(incorrect)
+	activate
+	if incorrect is true then
+		display dialog "Your BCS username or password was incorrect. Please try again."
+	end if
+	display dialog "Please enter your BCS username (first.last)" default answer ""
+	set username to escapeTheString(the text returned of the result)
+	
+	activate
+	
+	display dialog "Please enter your BCS password." default answer "" with hidden answer
+	set pass to escapeTheString(the text returned of the result)
+	
+end collectCredentials
+
+on escapeTheString(theString)
+	set chars to every character of theString
+	repeat with i from 1 to length of chars
+		if "!$&\"'*(){[|;<>?~` \\" contains (item i of chars as text) then
+			set item i of chars to "\\" & (item i of chars as text)
+		end if
+	end repeat
+	return every item of chars as string
+end escapeTheString
+
+on rot13(textString)
+	local outChars
+	set outChars to {}
+	repeat with ch in (characters of textString)
+		if (ch ³ "a" and ch ² "m") or (ch ³ "A" and ch ² "M") then
+			set ch to character id ((id of ch) + 13)
+		else if (ch ³ "n" and ch ² "z") or (ch ³ "N" and ch ² "Z") then
+			set ch to character id ((id of ch) - 13)
+		end if
+		set end of outChars to ch
+	end repeat
+	return outChars as text
+end rot13
+
+on mountDrives()
+	set smb_mount to "mount -t smbfs "
+	set errorBool to false
+	set finishedBool to false
+	repeat until finishedBool is true
+		activate
+		display dialog "Mapping home drive" buttons {"Cancel"} giving up after 5
+		
+		try
+			do shell script "rmdir /Volumes/" & username
+		end try
+		try
+			do shell script "mkdir /Volumes/" & username
+			
+		end try
+		try
+			do shell script smb_mount & "//" & username & ":" & pass & "@frodo.brentwood.bc.ca/" & username & "$ /Volumes/" & username
+		on error
+			set errorBool to true
+		end try
+		
+		activate
+		display dialog "Mapping share drive" buttons {"Cancel"} giving up after 5
+		
+		try
+			do shell script "rmdir /Volumes/share"
+		end try
+		try
+			do shell script "mkdir /Volumes/share"
+		end try
+		try
+			do shell script smb_mount & "//" & username & ":" & pass & "@frodo.brentwood.bc.ca/share /Volumes/share"
+		on error
+			set errorBool to true
+		end try
+		if errorBool is true then
+			collectCredentials(true)
+			set errorBool to false
+		else
+			set finishedBool to true
+		end if
+	end repeat
+end mountDrives
